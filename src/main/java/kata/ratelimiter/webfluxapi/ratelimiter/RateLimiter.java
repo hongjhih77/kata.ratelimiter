@@ -25,5 +25,5 @@ public abstract class RateLimiter {
         return tryAcquire(Instant.now().toEpochMilli());
     }
 
-    abstract int getAcquired();
+    public abstract int getAcquired();
 }

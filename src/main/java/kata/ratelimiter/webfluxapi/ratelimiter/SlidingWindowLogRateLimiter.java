@@ -22,7 +22,7 @@ public class SlidingWindowLogRateLimiter extends RateLimiter {
     }
 
     @Override
-    int getAcquired() {
+    public int getAcquired() {
         return timeLogQueue.size();
     }
 
