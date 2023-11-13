@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class SlidingWindowLogRateLimiter extends RateLimiter {
 
-    ConcurrentLinkedQueue<Long> timeLogQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Long> timeLogQueue = new ConcurrentLinkedQueue<>();
 
     /**
      * @param timeFrameSeconds the time frame of the permits in seconds
