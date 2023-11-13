@@ -1,9 +1,10 @@
 package kata.ratelimiter.webfluxapi.ratelimiter;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SlidingWindowLogRateLimiterTest {
 
@@ -12,7 +13,7 @@ class SlidingWindowLogRateLimiterTest {
     static final int PERMITS = 2;
 
     @BeforeEach
-    void beforeEach(){
+    void beforeEach() {
         rateLimiter = new SlidingWindowLogRateLimiter(TIME_FRAME_SECOND, PERMITS);
     }
 
@@ -22,8 +23,8 @@ class SlidingWindowLogRateLimiterTest {
             "[Then] the acquiring should succeed.")
     void tryAcquire() {
 
-        Assertions.assertTrue(rateLimiter.tryAcquire(1));
-        Assertions.assertTrue(rateLimiter.tryAcquire(1));
+        assertThat(rateLimiter.tryAcquire(1)).isTrue();
+        assertThat(rateLimiter.tryAcquire(1)).isTrue();
     }
 
     @Test
@@ -33,12 +34,12 @@ class SlidingWindowLogRateLimiterTest {
     void tryAcquire1() {
 
         //when
-        Assertions.assertTrue(rateLimiter.tryAcquire(1));
-        Assertions.assertTrue(rateLimiter.tryAcquire(1));
+        assertThat(rateLimiter.tryAcquire(1)).isTrue();
+        assertThat(rateLimiter.tryAcquire(1)).isTrue();
 
         //then
-        Assertions.assertFalse(rateLimiter.tryAcquire(1));
-        Assertions.assertEquals(3, rateLimiter.getAcquired());
+        assertThat(rateLimiter.tryAcquire(1)).isFalse();
+        assertThat(rateLimiter.getAcquired()).isEqualTo(3);
     }
 
     @Test
@@ -48,11 +49,11 @@ class SlidingWindowLogRateLimiterTest {
     void tryAcquire2() {
 
         //when
-        Assertions.assertTrue(rateLimiter.tryAcquire(1));
-        Assertions.assertTrue(rateLimiter.tryAcquire(2));
+        assertThat(rateLimiter.tryAcquire(1)).isTrue();
+        assertThat(rateLimiter.tryAcquire(2)).isTrue();
 
         //then
-        Assertions.assertTrue(rateLimiter.tryAcquire(1 + TIME_FRAME_SECOND * 1000));
-        Assertions.assertEquals(2, rateLimiter.getAcquired());
+        assertThat(rateLimiter.tryAcquire(1 + TIME_FRAME_SECOND * 1000)).isTrue();
+        assertThat(rateLimiter.getAcquired()).isEqualTo(2);
     }
 }
