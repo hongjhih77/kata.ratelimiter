@@ -1,7 +1,6 @@
 package kata.ratelimiter.webfluxapi.filter;
 
-import kata.ratelimiter.webfluxapi.ratelimiter.RateLimiter;
-import kata.ratelimiter.webfluxapi.ratelimiter.SlidingWindowLogRateLimiter;
+import kata.ratelimiter.webfluxapi.ratelimiter.RequestLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,6 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Component
 @Profile("ratelimit")
 public class ApiFilter implements WebFilter {
@@ -24,15 +20,15 @@ public class ApiFilter implements WebFilter {
 
     private final long rateLimitTimeFrameSeconds;
     private final int rateLimitPermitsInAFrame;
-
-    private static final String HEADER_X_RATELIMIT_LIMIT = "X-Ratelimit-Limit";
-    Map<String, RateLimiter> rateLimitByKey = new ConcurrentHashMap<>();
+    private final RequestLimiter requestLimiter;
 
     @Autowired
-    public ApiFilter(@Value("${rate_limit_time_frame_seconds:60}") long timeFrameSeconds,
+    public ApiFilter(RequestLimiter requestLimiter,
+                     @Value("${rate_limit_time_frame_seconds:60}") long timeFrameSeconds,
                      @Value("${rate_limit_permits_in_a_frame:10}") int permits) {
         this.rateLimitTimeFrameSeconds = timeFrameSeconds;
         this.rateLimitPermitsInAFrame = permits;
+        this.requestLimiter = requestLimiter;
     }
 
     @Override
@@ -40,19 +36,15 @@ public class ApiFilter implements WebFilter {
         var sourceIP = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
         var uri = exchange.getRequest().getURI();
         var path = uri.getPath();
+        String rateLimitKey = getKeyOfRateLimiter(sourceIP, path);
 
-        var rateLimitKey = getKeyOfRateLimiter(sourceIP, path);
-        rateLimitByKey.putIfAbsent(rateLimitKey,
-                new SlidingWindowLogRateLimiter(rateLimitTimeFrameSeconds, rateLimitPermitsInAFrame));
-
-        RateLimiter rateLimiter = rateLimitByKey.get(rateLimitKey);
-        if (!rateLimiter.tryAcquire()) {
+        if (!requestLimiter.tryAcquire(rateLimitKey, rateLimitTimeFrameSeconds, rateLimitPermitsInAFrame)) {
             var response = exchange.getResponse();
             response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-            logger.info("Request blocked: key : {}, acquiring {}", rateLimitKey, rateLimiter.getAcquired());
+            logger.info("Request blocked: sourceIP : {}, path {}", sourceIP, path);
             return response.setComplete();
         }
-        logger.info("Request permitted: key : {}, acquiring {}", rateLimitKey, rateLimiter.getAcquired());
+        logger.info("Request permitted: sourceIP : {}, path {}", sourceIP, path);
 
         return chain.filter(exchange);
     }
