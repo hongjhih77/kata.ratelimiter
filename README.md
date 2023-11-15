@@ -13,6 +13,10 @@
    - Limit each IP address to 10 requests per minute.
    - If the limit is exceeded, return an HTTP 429 status (Too Many Requests).
 
+## Algorithm
+### Sliding window log [3]
+![Sliding window log](Sliding window log.png)
+
 ## Reference
    - [1] [How to test a Webfilter](https://github.com/spring-projects/spring-framework/blob/main/spring-web/src/test/java/org/springframework/web/cors/reactive/CorsWebFilterTests.java)
    - [2] [Google Guava: RateLimiter ](https://github.com/google/guava/blob/ed21dbb15ae0350fa9097b2959a71501a90d2dbe/guava/src/com/google/common/util/concurrent/RateLimiter.java)
