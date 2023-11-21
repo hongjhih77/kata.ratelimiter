@@ -17,7 +17,9 @@ public class SlidingWindowLogRateLimiter extends RateLimiter {
     @Override
     boolean tryAcquire(long currentEpochMilli) {
         timeLogQueue.add(currentEpochMilli);
-        removeOutDated(currentEpochMilli);
+        if(timeLogQueue.size() > permits){
+            removeOutDated(currentEpochMilli);
+        }
         return timeLogQueue.size() <= permits;
     }
 
@@ -26,7 +28,7 @@ public class SlidingWindowLogRateLimiter extends RateLimiter {
         return timeLogQueue.size();
     }
 
-    private void removeOutDated(long currentEpochMilli) {
+    private synchronized void removeOutDated(long currentEpochMilli) {
         while (timeLogQueue.peek() != null && (currentEpochMilli - timeLogQueue.peek()) >= timeFrameSeconds * 1000) {
             timeLogQueue.poll();
         }
