@@ -2,7 +2,10 @@ package kata.ratelimiter.webfluxapi.ratelimiter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,5 +58,43 @@ class SlidingWindowLogRateLimiterTest {
         //then
         assertThat(rateLimiter.tryAcquire(1 + TIME_FRAME_SECOND * 1000)).isTrue();
         assertThat(rateLimiter.getAcquired()).isEqualTo(2);
+    }
+
+    @RepeatedTest(10)
+    @DisplayName("Concurrency Test For removeOutDated()")
+    void removeOutdatedTest() throws InterruptedException {
+        int time_frame_second = 60;
+        int permit = 1000;
+        rateLimiter = new SlidingWindowLogRateLimiter(time_frame_second, permit);
+        for (int i = 1; i <= permit; i++) {
+            rateLimiter.tryAcquire(i);
+        }
+
+        AtomicBoolean t3Acquired = new AtomicBoolean(true);
+        var t3 = new Thread(() -> {
+            for (int i = 1; i <= permit / 2; i++) {
+                if (!rateLimiter.tryAcquire(i + permit + time_frame_second * 1000)) {
+                    t3Acquired.set(false);
+                }
+            }
+        });
+
+        AtomicBoolean t4Acquired = new AtomicBoolean(true);
+        var t4 = new Thread(() -> {
+            for (int i = permit / 2 + 1; i <= permit; i++) {
+                if (!rateLimiter.tryAcquire(i + permit + time_frame_second * 1000)) {
+                    t4Acquired.set(false);
+                }
+            }
+        });
+
+        t3.start();
+        t4.start();
+        t3.join();
+        t4.join();
+
+        assertThat(rateLimiter.getAcquired()).isEqualTo(permit);
+        assertThat(t3Acquired.get()).isTrue();
+        assertThat(t4Acquired.get()).isTrue();
     }
 }
