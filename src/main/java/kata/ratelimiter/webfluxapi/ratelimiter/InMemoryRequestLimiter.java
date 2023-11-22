@@ -1,5 +1,6 @@
 package kata.ratelimiter.webfluxapi.ratelimiter;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Profile("ratelimit-in-mem")
+@Primary
 public class InMemoryRequestLimiter implements RequestLimiter {
 
     Map<String, RateLimiter> rateLimitByKey = new ConcurrentHashMap<>();
