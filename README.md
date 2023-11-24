@@ -17,6 +17,16 @@
 ### Sliding window log [3]
 ![Sliding window log](Sliding window log.png)
 
+## Implementations
+1. In service rate limiter.
+   > kata.ratelimiter.webfluxapi.ratelimiter.InMemoryRequestLimiter
+   
+   Trade-off: scalability
+2. Redis
+   > kata.ratelimiter.webfluxapi.ratelimiter.RedisRequestLimiter
+   
+   Trad-off: Network round trip (Latency)
+
 ## Reference
    - [1] [How to test a Webfilter](https://github.com/spring-projects/spring-framework/blob/main/spring-web/src/test/java/org/springframework/web/cors/reactive/CorsWebFilterTests.java)
    - [2] [Google Guava: RateLimiter ](https://github.com/google/guava/blob/ed21dbb15ae0350fa9097b2959a71501a90d2dbe/guava/src/com/google/common/util/concurrent/RateLimiter.java)
